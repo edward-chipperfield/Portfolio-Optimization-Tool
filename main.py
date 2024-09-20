@@ -4,6 +4,7 @@ from scipy.optimize import minimize
 import yfinance as yf
 from scipy.cluster.hierarchy import linkage, dendrogram
 import matplotlib.pyplot as plt
+from prettytable import PrettyTable
 
 # tickers
 tickers = ["GOOG", "AAPL", "META", "BABA", "AMZN", "GE", "AMD", "WMT",
@@ -16,7 +17,6 @@ def download_stock_data(tickers, start_date, end_date):
     return data
 
 def get_current_prices(tickers):
-    """Fetch current stock prices for the tickers using yfinance"""
     data = yf.download(tickers, period="1d")['Adj Close']
     return data.iloc[0]  # retrieve most recent data
 
@@ -169,17 +169,55 @@ def analyze_and_recommend():
     best_strategy = max(strategies, key=lambda s: strategies[s]["sharpe"])
     print(f"\nRecommended Strategy (based off Sharpe Ratio): {best_strategy}")
 
-# output results for each stratergy
-print(f"\nEfficient Frontier Portfolio:")
+# output results for each strategy
+def display_portfolio(investments, total_invested, leftover, strategy_name):
+    print(f"\n{strategy_name} Portfolio:")
+    print(f"Total Invested: ${total_invested:.2f}, Leftover: ${leftover:.2f}")
+    
+    print("\nStock Allocations:")
+    for ticker, data in investments.items():
+        print(f"{ticker}: {data['Shares']} shares, Invested: ${data['Invested']:.2f}")
+    print("\n")
+
+# Function to display portfolio results in a tabular format
+def display_portfolio(investments, total_invested, leftover, strategy_name):
+    print(f"\n{'=' * 40}")
+    print(f"{strategy_name} Portfolio".center(40))
+    print(f"{'=' * 40}\n")
+    
+    print(f"Total Invested: ${total_invested:,.2f}")
+    print(f"Leftover: ${leftover:,.2f}\n")
+    
+    # Create table to display stock allocations
+    table = PrettyTable()
+    table.field_names = ["Ticker", "Shares", "Invested Amount ($)"]
+    
+    for ticker, data in investments.items():
+        table.add_row([ticker, f"{int(data['Shares']):,}", f"${data['Invested']:.2f}"])
+    
+    print(table)
+    print("\n")
+
+# Efficient Frontier Portfolio
+print(f"{'=' * 60}")
+print(f"Efficient Frontier Portfolio Summary")
+print(f"{'=' * 60}")
 print(f"Expected annual return: {port_return_ef:.2%}, Volatility: {port_volatility_ef:.2%}, Sharpe Ratio: {sharpe_ef:.2f}")
-print(f"Total Invested: ${total_invested_ef:.2f}, Leftover: ${leftover_ef:.2f}")
+display_portfolio(investments_ef, total_invested_ef, leftover_ef, "Efficient Frontier")
 
-print(f"\nBlack-Litterman Portfolio:")
+# Black-Litterman Portfolio
+print(f"{'=' * 60}")
+print(f"Black-Litterman Portfolio Summary")
+print(f"{'=' * 60}")
 print(f"Expected annual return: {port_return_bl:.2%}, Volatility: {port_volatility_bl:.2%}, Sharpe Ratio: {sharpe_bl:.2f}")
-print(f"Total Invested: ${total_invested_bl:.2f}, Leftover: ${leftover_bl:.2f}")
+display_portfolio(investments_bl, total_invested_bl, leftover_bl, "Black-Litterman")
 
-print(f"\nHRP Portfolio:")
+# HRP Portfolio
+print(f"{'=' * 60}")
+print(f"HRP Portfolio Summary")
+print(f"{'=' * 60}")
 print(f"Expected annual return: {port_return_hrp:.2%}, Volatility: {port_volatility_hrp:.2%}, Sharpe Ratio: {sharpe_hrp:.2f}")
-print(f"Total Invested: ${total_invested_hrp:.2f}, Leftover: ${leftover_hrp:.2f}")
+display_portfolio(investments_hrp, total_invested_hrp, leftover_hrp, "HRP")
 
+# Analysis and recommendation
 analyze_and_recommend()
